@@ -1,0 +1,39 @@
+name: Deploy to DirectAdmin via FTP
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+env:
+  # Đường dẫn đích trên hosting của bạn
+  SERVER_DIR: ./domains/ftpdeploy.hoshisky.com/public_html/
+
+jobs:
+  deploy:
+    name: FTP Upload Minimal Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Sync files via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}     # IP hosting của bạn (Ví dụ: 112.78.2.35)
+          username: ${{ secrets.FTP_USERNAME }} # User hosting (Ví dụ: hos59352)
+          password: ${{ secrets.FTP_PASSWORD }} # Mật khẩu FTP/Hosting
+          protocol: ftp                         # Ép dùng FTP thuần để tương thích 100% với Firewall
+          port: 21
+          timeout: 120000
+          
+          # Thư mục đích trên hosting
+          server-dir: ${{ env.SERVER_DIR }}
+          
+          # THUẬT TOÁN LỌC: Loại bỏ tất cả, CHỈ GIỮ LẠI index.js và package.json
+          exclude: |
+            **/*
+            !package.json
+            !index.js
