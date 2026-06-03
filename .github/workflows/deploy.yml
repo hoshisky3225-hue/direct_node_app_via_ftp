@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
 
 env:
-  # Đường dẫn đích trên hosting của bạn
   SERVER_DIR: ./domains/ftpdeploy.hoshisky.com/public_html/
 
 jobs:
@@ -22,17 +21,18 @@ jobs:
       - name: Sync files via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_SERVER }}     # IP hosting của bạn (Ví dụ: 112.78.2.35)
-          username: ${{ secrets.FTP_USERNAME }} # User hosting (Ví dụ: hos59352)
-          password: ${{ secrets.FTP_PASSWORD }} # Mật khẩu FTP/Hosting
-          protocol: ftp                         # Ép dùng FTP thuần để tương thích 100% với Firewall
+          # Secret FTP_SERVER: hostname hoặc IP thuần (không có ftp://)
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # FTPS explicit TLS (port 21) — khớp FileZilla "FTP over explicit TLS"
+          # Nếu host chỉ hỗ trợ FTP thuần, đổi lại thành: protocol: ftp
+          protocol: ftps
           port: 21
-          timeout: 120000
-          
-          # Thư mục đích trên hosting
+          security: loose
+          timeout: 190000
+          log-level: verbose
           server-dir: ${{ env.SERVER_DIR }}
-          
-          # THUẬT TOÁN LỌC: Loại bỏ tất cả, CHỈ GIỮ LẠI index.js và package.json
           exclude: |
             **/*
             !package.json
