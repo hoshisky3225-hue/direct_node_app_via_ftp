@@ -21,10 +21,17 @@ jobs:
     if: >
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
+    # secrets không dùng được trong if — map sang env trước
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
 
     steps:
+      - name: Skip — SSH secrets chưa cấu hình
+        if: env.SSH_HOST == ''
+        run: echo "::warning::Thiếu secret SSH_HOST — bỏ qua npm install."
+
       - name: npm install on server (SSH)
-        if: ${{ secrets.SSH_HOST != '' }}
+        if: env.SSH_HOST != ''
         uses: appleboy/ssh-action@v1.2.0
         env:
           REMOTE_APP_DIR: ${{ env.REMOTE_APP_DIR }}
