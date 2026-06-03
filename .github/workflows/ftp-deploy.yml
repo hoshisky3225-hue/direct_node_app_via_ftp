@@ -1,4 +1,4 @@
-name: Deploy to DirectAdmin via FTP
+name: Deploy FTP to DirectAdmin
 
 on:
   push:
@@ -10,8 +10,8 @@ env:
   SERVER_DIR: ./domains/ftpdeploy.hoshisky.com/public_html/
 
 jobs:
-  deploy:
-    name: FTP Upload Minimal Files
+  ftp-upload:
+    name: Sync files via FTP
     runs-on: ubuntu-latest
 
     steps:
@@ -21,12 +21,9 @@ jobs:
       - name: Sync files via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          # Secret FTP_SERVER: hostname hoặc IP thuần (không có ftp://)
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          # FTPS explicit TLS (port 21) — khớp FileZilla "FTP over explicit TLS"
-          # Nếu host chỉ hỗ trợ FTP thuần, đổi lại thành: protocol: ftp
           protocol: ftps
           port: 21
           security: loose
@@ -36,4 +33,5 @@ jobs:
           exclude: |
             **/*
             !package.json
+            !package-lock.json
             !index.js

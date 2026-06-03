@@ -1,0 +1,48 @@
+name: npm install on DirectAdmin
+
+on:
+  # Chạy sau khi workflow FTP hoàn tất thành công
+  workflow_run:
+    workflows: ["Deploy FTP to DirectAdmin"]
+    types: [completed]
+    branches:
+      - master
+  # Hoặc chạy tay khi cần (không cần deploy FTP trước)
+  workflow_dispatch:
+
+env:
+  REMOTE_APP_DIR: domains/ftpdeploy.hoshisky.com/public_html
+
+jobs:
+  npm-install:
+    name: npm install via SSH
+    runs-on: ubuntu-latest
+    # Chỉ chạy khi FTP thành công; workflow_dispatch luôn được phép
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: npm install on server (SSH)
+        if: ${{ secrets.SSH_HOST != '' }}
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          REMOTE_APP_DIR: ${{ env.REMOTE_APP_DIR }}
+          NODE_VENV_ACTIVATE: ${{ secrets.NODE_VENV_ACTIVATE }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          envs: REMOTE_APP_DIR,NODE_VENV_ACTIVATE
+          script_stop: true
+          script: |
+            set -e
+            cd "$HOME/$REMOTE_APP_DIR"
+            if [ -n "$NODE_VENV_ACTIVATE" ] && [ -f "$NODE_VENV_ACTIVATE" ]; then
+              . "$NODE_VENV_ACTIVATE"
+            fi
+            npm install --omit=dev --no-audit --no-fund
+            mkdir -p tmp
+            touch tmp/restart.txt
+            echo "Done: npm install + restart signal (tmp/restart.txt)"
